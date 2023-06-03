@@ -1,0 +1,1 @@
+void app_display_start(void);
