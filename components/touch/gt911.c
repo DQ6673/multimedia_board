@@ -2,7 +2,7 @@
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
+#include "freertos/queue.h"
 #include "esp_log.h"
 #include "esp_check.h"
 
@@ -67,7 +67,8 @@ const uint8_t gt911_cfg_param_factory[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0X21, 0};
 
-EventGroupHandle_t gt911_event_group = NULL;
+QueueHandle_t touch_signal_queue = NULL;
+gt911_handle_t touch_handle = NULL;
 
 /*************************************************************/
 static void gt911_init(void);
@@ -80,6 +81,7 @@ static void IRAM_ATTR gt911_int_handler(void *arg);
 static void gt911_swap_x_y(void);
 static void gt911_mirror_x(void);
 static void gt911_mirror_y(void);
+
 /*************************************************************/
 
 gt911_handle_t gt911_new_dev(void)
@@ -107,9 +109,6 @@ static void gt911_init(void)
     gt911_set_dev_addr();
     // gt911_config();
     // gt911_read_cfg();
-    gt911_event_group = xEventGroupCreate();
-    if (gt911_event_group == NULL)
-        ESP_LOGE(TAG, "event group created,faild");
 }
 
 static void gt911_set_dev_addr(void)
@@ -215,7 +214,7 @@ void gt911_read_pos(gt911_handle_t handle)
         gt911_read_reg(GTP_STATUS_RW, &status_reg, 1); // re-read per 1ms
         if (++count >= 10)
         {
-            ESP_LOGE(TAG, "read pos failed");
+            // ESP_LOGE(TAG, "read pos failed");
             return;
         }
     }
@@ -249,10 +248,8 @@ void gt911_read_pos(gt911_handle_t handle)
 static void IRAM_ATTR gt911_int_handler(void *arg)
 {
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    xEventGroupSetBitsFromISR(
-        gt911_event_group,
-        GT911_EVENT_TOUCH,
-        &xHigherPriorityTaskWoken);
+    static uint8_t touch_signal = 1;
+    xQueueSendFromISR(touch_signal_queue, &touch_signal, &xHigherPriorityTaskWoken);
 }
 
 static void gt911_swap_x_y(void)
@@ -268,4 +265,17 @@ static void gt911_mirror_x(void)
 static void gt911_mirror_y(void)
 {
     mirror_y_set = true;
+}
+
+void touch_init(void)
+{
+    touch_handle = gt911_new_dev();
+    touch_handle->init();
+    // touch_handle->read_cfg();
+    touch_handle->swap_x_y();
+    touch_handle->mirror_x();
+
+    touch_signal_queue = xQueueCreate(1, sizeof(uint8_t));
+    if (touch_signal_queue == NULL)
+        ESP_LOGE(TAG, "create touch queue failed");
 }

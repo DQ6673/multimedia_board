@@ -18,7 +18,7 @@ typedef struct
 
 typedef gt911_t *gt911_handle_t;
 
-gt911_handle_t gt911_new_dev(void);
+void touch_init(void);
 void gt911_read_pos(gt911_handle_t handle);
 
 #define GT911_EVENT_TOUCH (1 << 0)

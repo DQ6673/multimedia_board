@@ -32,7 +32,21 @@
         "esp_lcd_types.h": "c",
         "iic.h": "c",
         "lvgl.h": "c",
-        "lv_log.h": "c"
+        "lv_log.h": "c",
+        "lcd.h": "c",
+        "*.tcc": "c",
+        "app.h": "c",
+        "esp_system.h": "c",
+        "esp_heap_caps.h": "c",
+        "array": "c",
+        "string": "c",
+        "string_view": "c",
+        "lv_demo_benchmark.h": "c",
+        "gpio.h": "c",
+        "lv_demos.h": "c",
+        "future": "c",
+        "system_error": "c",
+        "regex": "c"
     },
     "idf.flashType": "UART",
     "idf.portWin": "COM5"

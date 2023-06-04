@@ -1,10 +1,13 @@
-set(srcs "app_main.c")
+set(srcs "app_main.c" "app_display.c" )
 
 set(includes ".")
 
 set(requires 
                 "driver"
                 "esp_lcd"
+                "esp_timer"
+                "heap"
+                
                 "lcd"
                 "touch"
                 "lvgl"

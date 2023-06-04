@@ -1,4 +1,4 @@
-set(srcs "esp_lcd_panel_st7796.c")
+set(srcs "esp_lcd_panel_st7796.c" "lcd.c")
 
 set(includes ".")
 

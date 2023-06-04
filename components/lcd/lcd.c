@@ -1,6 +1,7 @@
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_st7796.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "lcd.h"
 
 // pin define
 #define LCD_PIN_DB0 13
@@ -19,19 +20,25 @@
 
 //
 #define LCD_BUS_WIDTH 8
-#define LCD_RES_H 480
-#define LCD_RES_V 320
 #define LCD_PSRAM_DATA_ALIGNMENT 64
 #define LCD_PIXEL_CLOCK_HZ (20 * 1000 * 1000)
 #define LCD_CMD_BITS 8
 #define LCD_PARAM_BITS 8
-#define LCD_MAX_TRANS_BYTES (LCD_RES_H * 100 * sizeof(uint16_t))
+#define LCD_MAX_TRANS_BYTES (LCD_RES_H * LCD_RES_V * sizeof(uint16_t))
 
 //
 #define LCD_BITS_PER_PIXEL 16 // RGB565
 
+esp_lcd_panel_handle_t lcd_panel_handle;
+QueueHandle_t lcd_flush_done_queue;
+
 static bool lcd_color_trans_done_cb(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
+    // BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    // static uint8_t flush_done_flag = 1;
+
+    // xQueueSendFromISR(lcd_flush_done_queue, &flush_done_flag, &xHigherPriorityTaskWoken);
+
     return false;
 }
 
@@ -80,10 +87,9 @@ void lcd_init(void)
     };
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(i80_bus_handle, &io_config, &io_handle));
 
-    esp_lcd_panel_handle_t lcd_panel_handle = NULL;
     esp_lcd_panel_dev_config_t lcd_panel_config = {
         .reset_gpio_num = LCD_PIN_RST,
-        .rgb_endian = LCD_RGB_ENDIAN_RGB,
+        .rgb_endian = LCD_RGB_ENDIAN_BGR,
         .bits_per_pixel = LCD_BITS_PER_PIXEL,
     };
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7796(io_handle, &lcd_panel_config, &lcd_panel_handle));
@@ -91,6 +97,8 @@ void lcd_init(void)
     ESP_ERROR_CHECK(esp_lcd_panel_reset(lcd_panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(lcd_panel_handle));
     esp_lcd_panel_swap_xy(lcd_panel_handle, true);
+
+    lcd_flush_done_queue = xQueueCreate(1, sizeof(uint8_t));
     // ESP_ERROR_CHECK(esp_lcd_panel_invert_color(lcd_panel_handle, true));
     // ESP_ERROR_CHECK(esp_lcd_panel_set_gap(lcd_panel_handle, 0, 20));
     // ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(lcd_panel_handle, true));
