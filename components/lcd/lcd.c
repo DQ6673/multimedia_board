@@ -1,22 +1,8 @@
 #include "esp_lcd_panel_st7796.h"
+#include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "lcd.h"
-
-// pin define
-#define LCD_PIN_DB0 13
-#define LCD_PIN_DB1 12
-#define LCD_PIN_DB2 11
-#define LCD_PIN_DB3 10
-#define LCD_PIN_DB4 9
-#define LCD_PIN_DB5 46
-#define LCD_PIN_DB6 3
-#define LCD_PIN_DB7 20
-#define LCD_PIN_RDX 14
-#define LCD_PIN_WRX 21
-#define LCD_PIN_DCX 47
-#define LCD_PIN_CSX 48
-#define LCD_PIN_RST -1
 
 //
 #define LCD_BUS_WIDTH 8
@@ -44,6 +30,16 @@ static bool lcd_color_trans_done_cb(esp_lcd_panel_io_handle_t panel_io, esp_lcd_
 
 void lcd_init(void)
 {
+    gpio_config_t io_conf = {
+        // Tear Effect
+        .intr_type = GPIO_INTR_DISABLE,
+        .mode = GPIO_MODE_INPUT,
+        .pin_bit_mask = (1ULL << LCD_PIN_TE),
+        .pull_down_en = 1,
+        .pull_up_en = 0,
+    };
+    gpio_config(&io_conf);
+
     esp_lcd_i80_bus_handle_t i80_bus_handle = NULL;
     esp_lcd_i80_bus_config_t i80_bus_config = {
         .clk_src = LCD_CLK_SRC_DEFAULT, // 160MHz
@@ -96,7 +92,7 @@ void lcd_init(void)
 
     ESP_ERROR_CHECK(esp_lcd_panel_reset(lcd_panel_handle));
     ESP_ERROR_CHECK(esp_lcd_panel_init(lcd_panel_handle));
-    esp_lcd_panel_swap_xy(lcd_panel_handle, true);
+    ESP_ERROR_CHECK(esp_lcd_panel_swap_xy(lcd_panel_handle, true));
 
     lcd_flush_done_queue = xQueueCreate(1, sizeof(uint8_t));
     // ESP_ERROR_CHECK(esp_lcd_panel_invert_color(lcd_panel_handle, true));

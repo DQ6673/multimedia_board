@@ -200,20 +200,20 @@ static esp_err_t panel_st7796_init(esp_lcd_panel_t *panel)
     // 上述初始化配置结束后禁止写 table2 范围的寄存器
     esp_lcd_panel_io_tx_param(io, 0xF0, (uint8_t[]){0X3C}, 1);
     esp_lcd_panel_io_tx_param(io, 0xF0, (uint8_t[]){0X69}, 1);
-    // // 320
-    // esp_lcd_panel_io_tx_param(io, 0X2A, (uint8_t[]){0x00, 0x00, 0x01, 0x3F}, 4);
-    // // 480
-    // esp_lcd_panel_io_tx_param(io, 0X2B, (uint8_t[]){0x00, 0x00, 0x01, 0xDF}, 4);
-
-    esp_lcd_panel_io_tx_param(io, 0x35, (uint8_t[]){0X00}, 1);
+    // 320
+    esp_lcd_panel_io_tx_param(io, 0X2A, (uint8_t[]){0x00, 0x00, 0x01, 0x3F}, 4);
+    // 480
+    esp_lcd_panel_io_tx_param(io, 0X2B, (uint8_t[]){0x00, 0x00, 0x01, 0xDF}, 4);
 
     esp_lcd_panel_io_tx_param(io, 0x11, NULL, 0);
 
     vTaskDelay(pdMS_TO_TICKS(120));
 
     esp_lcd_panel_io_tx_param(io, 0x29, NULL, 0);
-
     esp_lcd_panel_io_tx_param(io, 0x21, NULL, 0);
+
+    // 开启 tear effect
+    esp_lcd_panel_io_tx_param(io, 0x35, (uint8_t[]){0X00}, 1);
 
     return ESP_OK;
 }
